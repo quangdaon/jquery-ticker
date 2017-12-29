@@ -199,7 +199,7 @@ var ms$2 = Object.freeze({
 
 var require$$0 = ( ms$2 && ms ) || ms$2;
 
-var debug$1 = createCommonjsModule(function (module, exports) {
+var debug = createCommonjsModule(function (module, exports) {
 /**
  * This is the common logic for both the Node.js and web browser
  * implementations of `debug()`.
@@ -215,6 +215,11 @@ exports.enabled = enabled;
 exports.humanize = require$$0;
 
 /**
+ * Active `debug` instances.
+ */
+exports.instances = [];
+
+/**
  * The currently active debug mode names, and names to skip.
  */
 
@@ -228,12 +233,6 @@ exports.skips = [];
  */
 
 exports.formatters = {};
-
-/**
- * Previous log timestamp.
- */
-
-var prevTime;
 
 /**
  * Select a color.
@@ -262,6 +261,8 @@ function selectColor(namespace) {
  */
 
 function createDebug(namespace) {
+
+  var prevTime;
 
   function debug() {
     // disabled?
@@ -319,13 +320,26 @@ function createDebug(namespace) {
   debug.enabled = exports.enabled(namespace);
   debug.useColors = exports.useColors();
   debug.color = selectColor(namespace);
+  debug.destroy = destroy;
 
   // env-specific initialization logic for debug instances
   if ('function' === typeof exports.init) {
     exports.init(debug);
   }
 
+  exports.instances.push(debug);
+
   return debug;
+}
+
+function destroy () {
+  var index = exports.instances.indexOf(this);
+  if (index !== -1) {
+    exports.instances.splice(index, 1);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 /**
@@ -342,10 +356,11 @@ function enable(namespaces) {
   exports.names = [];
   exports.skips = [];
 
+  var i;
   var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
   var len = split.length;
 
-  for (var i = 0; i < len; i++) {
+  for (i = 0; i < len; i++) {
     if (!split[i]) continue; // ignore empty strings
     namespaces = split[i].replace(/\*/g, '.*?');
     if (namespaces[0] === '-') {
@@ -353,6 +368,11 @@ function enable(namespaces) {
     } else {
       exports.names.push(new RegExp('^' + namespaces + '$'));
     }
+  }
+
+  for (i = 0; i < exports.instances.length; i++) {
+    var instance = exports.instances[i];
+    instance.enabled = exports.enabled(instance.namespace);
   }
 }
 
@@ -375,6 +395,9 @@ function disable() {
  */
 
 function enabled(name) {
+  if (name[name.length - 1] === '*') {
+    return true;
+  }
   var i, len;
   for (i = 0, len = exports.skips.length; i < len; i++) {
     if (exports.skips[i].test(name)) {
@@ -403,30 +426,32 @@ function coerce(val) {
 }
 });
 
-var debug_1 = debug$1.coerce;
-var debug_2 = debug$1.disable;
-var debug_3 = debug$1.enable;
-var debug_4 = debug$1.enabled;
-var debug_5 = debug$1.humanize;
-var debug_6 = debug$1.names;
-var debug_7 = debug$1.skips;
-var debug_8 = debug$1.formatters;
+var debug_1 = debug.coerce;
+var debug_2 = debug.disable;
+var debug_3 = debug.enable;
+var debug_4 = debug.enabled;
+var debug_5 = debug.humanize;
+var debug_6 = debug.instances;
+var debug_7 = debug.names;
+var debug_8 = debug.skips;
+var debug_9 = debug.formatters;
 
 
-var debug$3 = Object.freeze({
-	default: debug$1,
-	__moduleExports: debug$1,
+var debug$2 = Object.freeze({
+	default: debug,
+	__moduleExports: debug,
 	coerce: debug_1,
 	disable: debug_2,
 	enable: debug_3,
 	enabled: debug_4,
 	humanize: debug_5,
-	names: debug_6,
-	skips: debug_7,
-	formatters: debug_8
+	instances: debug_6,
+	names: debug_7,
+	skips: debug_8,
+	formatters: debug_9
 });
 
-var require$$0$1 = ( debug$3 && debug$1 ) || debug$3;
+var require$$0$1 = ( debug$2 && debug ) || debug$2;
 
 var browser = createCommonjsModule(function (module, exports) {
 /**
@@ -451,12 +476,17 @@ exports.storage = 'undefined' != typeof chrome
  */
 
 exports.colors = [
-  'lightseagreen',
-  'forestgreen',
-  'goldenrod',
-  'dodgerblue',
-  'darkorchid',
-  'crimson'
+  '#0000CC', '#0000FF', '#0033CC', '#0033FF', '#0066CC', '#0066FF', '#0099CC',
+  '#0099FF', '#00CC00', '#00CC33', '#00CC66', '#00CC99', '#00CCCC', '#00CCFF',
+  '#3300CC', '#3300FF', '#3333CC', '#3333FF', '#3366CC', '#3366FF', '#3399CC',
+  '#3399FF', '#33CC00', '#33CC33', '#33CC66', '#33CC99', '#33CCCC', '#33CCFF',
+  '#6600CC', '#6600FF', '#6633CC', '#6633FF', '#66CC00', '#66CC33', '#9900CC',
+  '#9900FF', '#9933CC', '#9933FF', '#99CC00', '#99CC33', '#CC0000', '#CC0033',
+  '#CC0066', '#CC0099', '#CC00CC', '#CC00FF', '#CC3300', '#CC3333', '#CC3366',
+  '#CC3399', '#CC33CC', '#CC33FF', '#CC6600', '#CC6633', '#CC9900', '#CC9933',
+  '#CCCC00', '#CCCC33', '#FF0000', '#FF0033', '#FF0066', '#FF0099', '#FF00CC',
+  '#FF00FF', '#FF3300', '#FF3333', '#FF3366', '#FF3399', '#FF33CC', '#FF33FF',
+  '#FF6600', '#FF6633', '#FF9900', '#FF9933', '#FFCC00', '#FFCC33'
 ];
 
 /**
@@ -473,6 +503,11 @@ function useColors() {
   // explicitly
   if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
     return true;
+  }
+
+  // Internet Explorer and Edge do not support colors.
+  if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
+    return false;
   }
 
   // is webkit? http://stackoverflow.com/a/16459606/376773
@@ -616,8 +651,41 @@ function localstorage() {
 }
 });
 
+var browser_1 = browser.log;
+var browser_2 = browser.formatArgs;
+var browser_3 = browser.save;
+var browser_4 = browser.load;
+var browser_5 = browser.useColors;
+var browser_6 = browser.storage;
+var browser_7 = browser.colors;
+
+
+var browser$2 = Object.freeze({
+	default: browser,
+	__moduleExports: browser,
+	log: browser_1,
+	formatArgs: browser_2,
+	save: browser_3,
+	load: browser_4,
+	useColors: browser_5,
+	storage: browser_6,
+	colors: browser_7
+});
+
+var require$$0$2 = ( browser$2 && browser ) || browser$2;
+
+var logger = function logger(location) {
+	{
+		var debug = require$$0$2;
+
+		debug.enable('ticker:*');
+
+		return debug('ticker:' + location);
+	}
+};
+
 /* This is where the magic happens */
-var log$1 = browser('ticker:brain');
+var log$1 = logger('brain');
 
 var FPSs = [60];
 
@@ -625,6 +693,7 @@ var tickers = [];
 
 var brain = {
 	getFps: function getFps() {
+		//return 60;
 		if (!rafSupported) return 60;
 		var l = FPSs.length;
 		return FPSs.reduce(function (a, b) {
@@ -654,7 +723,7 @@ var brain = {
 			$(window).on('load focus', function () {
 				log$1('Frame Count: %d, FPS Interval: %d', frameCount, fpsInterval);
 				if (!fpsMon) {
-					//fpsInterval = frameCount;
+					fpsInterval = frameCount;
 					fpsMon = setInterval(function () {
 						FPSs.push(frameCount - fpsInterval);
 
@@ -815,7 +884,7 @@ var createClass = function () {
   };
 }();
 
-var log$2 = browser('ticker:class');
+var log$2 = logger('class');
 
 var Ticker = function () {
 	function Ticker(elem, settings) {
@@ -872,13 +941,7 @@ var Ticker = function () {
  * Small jQuery Plugin create by Quangdao Nguyen
  */
 
-var log = browser('ticker:entry');
-
-{
-	browser.enable('ticker:*');
-}
-
-log('development');
+var log = logger('entry');
 
 (function ($) {
 	'use strict';

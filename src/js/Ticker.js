@@ -1,9 +1,9 @@
 import { getSupportedTransform } from './helpers';
 import brain from './brain';
 
-import debug from 'debug';
+import logger from './logger';
 
-const log = debug('ticker:class');
+const log = logger('class');
 
 export default class Ticker {
 	constructor(elem, settings) {

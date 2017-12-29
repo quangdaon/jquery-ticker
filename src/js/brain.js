@@ -1,9 +1,9 @@
 /* This is where the magic happens */
 import { rafSupported, requestAnimFrame } from './helpers';
 
-import debug from 'debug';
+import logger from './logger';
 
-const log = debug('ticker:brain');
+const log = logger('brain');
 
 const FPSs = [60];
 
@@ -11,6 +11,7 @@ const tickers = [];
 
 export default {
 	getFps() {
+		//return 60;
 		if (!rafSupported) return 60;
 		const l = FPSs.length;
 		return FPSs.reduce(function (a, b) {
@@ -37,7 +38,7 @@ export default {
 			$(window).on('load focus', function () {
 				log('Frame Count: %d, FPS Interval: %d', frameCount, fpsInterval);
 				if (!fpsMon) {
-					//fpsInterval = frameCount;
+					fpsInterval = frameCount;
 					fpsMon = setInterval(function () {
 						FPSs.push(frameCount - fpsInterval);
 

@@ -6,17 +6,9 @@ import defaultOptions from './defaults';
 import brain from './brain';
 import Ticker from './Ticker';
 
-import debug from 'debug';
+import logger from './logger';
 
-const log = debug('ticker:entry');
-
-if ('|ENV|' === 'development') {
-	debug.enable('ticker:*');
-} else {
-	debug.disable('ticker:*');
-}
-
-log('|ENV|');
+const log = logger('entry');
 
 (function ($) {
 	'use strict';
