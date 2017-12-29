@@ -1,0 +1,27 @@
+.js-ticker {
+	overflow: hidden;
+	&-track {
+		//display: flex;
+		//position: relative;
+		white-space: nowrap;
+	}
+	&-item {
+		white-space: normal;
+		height: 100%;
+		vertical-align: top;
+		display: inline-block;
+		position: relative;
+	}
+	@supports (display: flex) {
+		&-track {
+			display: flex;
+			position: relative;
+			white-space: normal;
+		}
+		&-item {
+			height: auto;
+			display: block;
+			flex: 1 0 auto;
+		}
+	}
+}
