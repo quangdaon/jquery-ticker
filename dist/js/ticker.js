@@ -5,10 +5,16 @@ var defaultOptions = {
 	item: 'div',
 
 	// Boolean: Toggles whether the ticker should pause if the mouse cursor is over it
-	pauseOnHover: true,
+	pauseOnHover: false,
 
 	// Number: Speed of ticker in Pixels/Second.
-	speed: 60
+	speed: 60,
+
+	// String: (track|item) Sets whether ticker breaks when it hits a new item or if the track has reset
+	pauseOn: '',
+
+	// Number: Pause duration for pauseOn
+	delay: 500
 };
 
 var rafSupported = true;
@@ -691,16 +697,19 @@ var FPSs = [60];
 
 var tickers = [];
 
-var brain = {
-	getFps: function getFps() {
-		//return 60;
-		if (!rafSupported) return 60;
-		var l = FPSs.length;
-		return FPSs.reduce(function (a, b) {
-			return a + b;
-		}) / l;
-	},
+function getFps() {
+	//return 60;
+	if (!rafSupported) return 60;
+	var l = FPSs.length;
+	return FPSs.reduce(function (a, b) {
+		return a + b;
+	}) / l;
+}
 
+var brain = {
+	get fps() {
+		return getFps();
+	},
 	get tickers() {
 		return tickers;
 	},
@@ -722,14 +731,15 @@ var brain = {
 			var fpsMon = void 0;
 			$(window).on('load focus', function () {
 				log$1('Frame Count: %d, FPS Interval: %d', frameCount, fpsInterval);
-				if (!fpsMon) {
+				if (!fpsMon && document.hasFocus()) {
 					fpsInterval = frameCount;
 					fpsMon = setInterval(function () {
-						FPSs.push(frameCount - fpsInterval);
+						var fps = frameCount - fpsInterval;
+						FPSs.push(fps);
 
 						while (FPSs.length > 10) {
 							FPSs.shift();
-						}log$1(FPSs);
+						}log$1(getFps());
 
 						fpsInterval = frameCount;
 					}, 1000);
@@ -898,33 +908,66 @@ var Ticker = function () {
 
 		this.__offset = 0;
 
-		this.__first = this.track.children('.js-ticker-item').first();
-
-		log$2(brain.tickers);
-		brain.tickers.push(this);
-		log$2(brain.tickers);
+		this.build();
 	}
 
 	createClass(Ticker, [{
+		key: 'build',
+		value: function build() {
+			var _this = this;
+
+			if (!this.started) {
+				this.started = true;
+				this.__items = this.track.children('.js-ticker-item');
+
+				this.__first = this.__items.first();
+				this.__first.attr('data-first', true);
+
+				var targetWidth = this.elem.width() + this.__first.width();
+
+				log$2('(Pre Clones) Target Width: %d, Actual: %d', targetWidth, this.elem[0].scrollWidth);
+
+				while (this.elem[0].scrollWidth < targetWidth) {
+					this.__items.each(function (i) {
+						_this.track.append(_this.__items.eq(i).clone());
+					});
+				}
+
+				log$2('(Post Clones) Target Width: %d, Actual: %d', targetWidth, this.elem[0].scrollWidth);
+
+				this.elem.addClass('active');
+
+				brain.tickers.push(this);
+			}
+		}
+	}, {
 		key: 'advance',
 		value: function advance() {
-			this.__width = this.__first.outerWidth();
-			if (!this.elem.is(':hover') || !this.settings.pauseOnHover) {
+			var _this2 = this;
 
-				this.__offset += this.settings.speed / brain.getFps();
+			this.__width = this.__first.outerWidth();
+			if (!this.paused && (!this.elem.is(':hover') || !this.settings.pauseOnHover)) {
+
+				this.__offset += this.settings.speed / brain.fps;
 
 				if (this.__offset > this.__width) {
 					this.__offset = 0;
 					this.__first.appendTo(this.track);
 					this.__first = this.track.children('.js-ticker-item').first();
+					if (this.settings.pauseOn === 'item' || this.settings.pauseOn === 'track' && this.__first.data('first')) {
+						this.paused = true;
+						setTimeout(function () {
+							return _this2.paused = false;
+						}, this.settings.delay);
+					}
 				}
 
 				var transformProp = getSupportedTransform();
 
 				if (transformProp) {
-					this.track.css(transformProp, 'translateX(-' + this.__offset + 'px)');
+					this.track.css(transformProp, 'translateX(' + -this.__offset + 'px)');
 				} else {
-					this.track.css('left', '-' + this.__offset + 'px');
+					this.track.css('left', -this.__offset + 'px');
 				}
 			}
 		}
@@ -957,10 +1000,10 @@ var log = logger('entry');
 			var $ticker = $(this);
 			var $track = $('<div class="js-ticker-track">');
 
-			$ticker.append($track);
-
 			$ticker.addClass('js-ticker');
 			$ticker.children(settings.item).addClass('js-ticker-item').appendTo($track);
+
+			$ticker.append($track);
 
 			var ticker = new $.ticker($ticker, settings);
 			$(this).data('ticker', ticker);

@@ -3,8 +3,14 @@ export default {
 	item: 'div',
 
 	// Boolean: Toggles whether the ticker should pause if the mouse cursor is over it
-	pauseOnHover: true,
+	pauseOnHover: false,
 
 	// Number: Speed of ticker in Pixels/Second.
-	speed: 60
+	speed: 60,
+
+	// String: (track|item) Sets whether ticker breaks when it hits a new item or if the track has reset
+	pauseOn: '',
+
+	// Number: Pause duration for pauseOn
+	delay: 500
 };

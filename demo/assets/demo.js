@@ -1,5 +1,1 @@
-var ticker = $('.news').ticker({
-	item: '.news-item'
-});
-
-console.log(ticker);
+$(".default-ticker").ticker(),$(".speed-test").each(function(){$(this).ticker({speed:$(this).data("speed")||60})});

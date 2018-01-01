@@ -14,14 +14,24 @@
 	}
 	@supports (display: flex) {
 		&-track {
-			display: flex;
 			position: relative;
 			white-space: normal;
+			display: inline-flex;
 		}
 		&-item {
 			height: auto;
 			display: block;
-			flex: 1 0 auto;
+			flex: 0 0 auto;
+		}
+		&.active {
+			.js-ticker {
+				&-track {
+					display: flex;
+				}
+				&-item {
+					flex: 1 0 auto;
+				}
+			}
 		}
 	}
 }

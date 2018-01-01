@@ -23,10 +23,10 @@ const log = logger('entry');
 			const $ticker = $(this);
 			const $track = $('<div class="js-ticker-track">');
 
-			$ticker.append($track);
-
 			$ticker.addClass('js-ticker');
 			$ticker.children(settings.item).addClass('js-ticker-item').appendTo($track);
+
+			$ticker.append($track);
 
 			let ticker = new $.ticker($ticker, settings);
 			$(this).data('ticker', ticker);

@@ -1,0 +1,25 @@
+- var lorem = ['Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consectetur, quia.', 'Asperiores consequuntur harum necessitatibus pariatur quo quod temporibus unde velit.', 'Ab distinctio dolorem ea inventore ipsum nam quae quos unde.', 'Aliquam dignissimos dolorem libero nemo nobis numquam sapiente sunt tempora.', 'Deleniti eaque eos placeat voluptatibus! Accusantium architecto magnam non sequi.']
+
+mixin ticker(containerClass, itemClass, itemElem = 'div')
+	div(class=containerClass)
+		each ipsum in lorem
+			- var href = itemElem === 'a' ? '#' : null;
+			#{itemElem}(class=itemClass, href=href)=ipsum
+
+doctype html(lang='en')
+head
+	meta(charset='UTF-8')
+	title jQuery Ticker Demo
+	link(rel='stylesheet', href='../dist/css/ticker.css')
+	link(rel='stylesheet', href='./assets/demo.css')
+body
+	+ticker('default-ticker')
+	h2 Speed Demos
+	each speed in [30, 60, 120]
+		p=speed
+		.speed-test(data-speed = speed)
+			.speed-test-item.odd
+			.speed-test-item.even
+	script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js')
+	script(src='../dist/js/ticker.js')
+	script(src='./assets/demo.js')
