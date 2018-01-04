@@ -1,4 +1,4 @@
-html,body {
+html, body {
 	margin: 0;
 }
 
@@ -14,5 +14,16 @@ html {
 		&.even {
 			background: #000;
 		}
+	}
+}
+
+.news {
+	&-item {
+		padding: 20px;
+		background: #089031;
+		max-width: 25%;
+		color: #fff;
+		text-decoration: none;
+		border-right: 1px #ddd solid;
 	}
 }

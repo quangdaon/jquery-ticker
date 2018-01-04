@@ -14,6 +14,7 @@ export default class Ticker {
 		this.settings = settings;
 
 		this.__offset = 0;
+		this.__pauseTracker = 0;
 
 		this.build();
 	}
@@ -40,13 +41,30 @@ export default class Ticker {
 
 			this.elem.addClass('active');
 
+			this.initEvents();
+
 			brain.tickers.push(this);
 		}
 	}
 
+	initEvents() {
+		// Insurance to prevent doubling up on enter triggers
+		const initHover = () => {
+			this.elem.one('mouseenter', () => {
+				this.__pauseTracker++;
+				this.elem.one('mouseleave', () => {
+					this.__pauseTracker--;
+					initHover();
+				});
+			});
+		};
+
+		if(this.settings.pauseOnHover) initHover();
+	}
+
 	advance() {
 		this.__width = this.__first.outerWidth();
-		if (!this.paused && (!this.elem.is(':hover') || !this.settings.pauseOnHover)) {
+		if (!this.__pauseTracker) {
 
 			this.__offset += this.settings.speed / brain.fps;
 
@@ -54,9 +72,9 @@ export default class Ticker {
 				this.__offset = 0;
 				this.__first.appendTo(this.track);
 				this.__first = this.track.children('.js-ticker-item').first();
-				if (this.settings.pauseOn === 'item' || (this.settings.pauseOn === 'track' && this.__first.data('first'))) {
-					this.paused = true;
-					setTimeout(() => this.paused = false, this.settings.delay);
+				if (this.settings.pauseAt === 'item' || (this.settings.pauseAt === 'track' && this.__first.data('first'))) {
+					this.__pauseTracker++;
+					setTimeout(() => this.__pauseTracker--, this.settings.delay);
 				}
 			}
 

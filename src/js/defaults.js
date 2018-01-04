@@ -9,8 +9,8 @@ export default {
 	speed: 60,
 
 	// String: (track|item) Sets whether ticker breaks when it hits a new item or if the track has reset
-	pauseOn: '',
+	pauseAt: '',
 
-	// Number: Pause duration for pauseOn
+	// Number: Pause duration for pauseAt
 	delay: 500
 };

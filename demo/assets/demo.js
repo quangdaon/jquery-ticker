@@ -1,1 +1,1 @@
-$(".default-ticker").ticker(),$(".speed-test").each(function(){$(this).ticker({speed:$(this).data("speed")||60})});
+$(".default-ticker").ticker(),$(".news").ticker({speed:120,pauseOnHover:!0,item:".news-item"}),$(".speed-test").each(function(){$(this).ticker({speed:$(this).data("speed")||60})});

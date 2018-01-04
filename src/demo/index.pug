@@ -14,6 +14,7 @@ head
 	link(rel='stylesheet', href='./assets/demo.css')
 body
 	+ticker('default-ticker')
+	+ticker('news', 'news-item', 'a')
 	h2 Speed Demos
 	each speed in [30, 60, 120]
 		p=speed

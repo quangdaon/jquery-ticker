@@ -907,6 +907,7 @@ var Ticker = function () {
 		this.settings = settings;
 
 		this.__offset = 0;
+		this.__pauseTracker = 0;
 
 		this.build();
 	}
@@ -937,16 +938,36 @@ var Ticker = function () {
 
 				this.elem.addClass('active');
 
+				this.initEvents();
+
 				brain.tickers.push(this);
 			}
 		}
 	}, {
-		key: 'advance',
-		value: function advance() {
+		key: 'initEvents',
+		value: function initEvents() {
 			var _this2 = this;
 
+			// Insurance to prevent doubling up on enter triggers
+			var initHover = function initHover() {
+				_this2.elem.one('mouseenter', function () {
+					_this2.__pauseTracker++;
+					_this2.elem.one('mouseleave', function () {
+						_this2.__pauseTracker--;
+						initHover();
+					});
+				});
+			};
+
+			if (this.settings.pauseOnHover) initHover();
+		}
+	}, {
+		key: 'advance',
+		value: function advance() {
+			var _this3 = this;
+
 			this.__width = this.__first.outerWidth();
-			if (!this.paused && (!this.elem.is(':hover') || !this.settings.pauseOnHover)) {
+			if (!this.__pauseTracker) {
 
 				this.__offset += this.settings.speed / brain.fps;
 
@@ -954,10 +975,10 @@ var Ticker = function () {
 					this.__offset = 0;
 					this.__first.appendTo(this.track);
 					this.__first = this.track.children('.js-ticker-item').first();
-					if (this.settings.pauseOn === 'item' || this.settings.pauseOn === 'track' && this.__first.data('first')) {
-						this.paused = true;
+					if (this.settings.pauseAt === 'item' || this.settings.pauseAt === 'track' && this.__first.data('first')) {
+						this.__pauseTracker++;
 						setTimeout(function () {
-							return _this2.paused = false;
+							return _this3.__pauseTracker--;
 						}, this.settings.delay);
 					}
 				}
