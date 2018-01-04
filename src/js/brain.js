@@ -56,7 +56,6 @@ export default {
 				}
 			}).on('blur', function () {
 				clearInterval(fpsMon);
-
 				fpsMon = null;
 			});
 		}

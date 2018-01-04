@@ -746,7 +746,6 @@ var brain = {
 				}
 			}).on('blur', function () {
 				clearInterval(fpsMon);
-
 				fpsMon = null;
 			});
 		}
@@ -908,8 +907,6 @@ var Ticker = function () {
 
 		this.elem = elem;
 
-		this.track = this.elem.find('.js-ticker-track');
-
 		this.settings = settings;
 
 		this.__offset = 0;
@@ -925,11 +922,26 @@ var Ticker = function () {
 
 			if (!this.started) {
 				this.started = true;
+
+				//region Build Track
+				var track = document.createElement('div'); // <div class="js-ticker-track">;
+				track.className = 'js-ticker-track';
+
+				this.elem.addClass('js-ticker');
+				this.elem.children(this.settings.item).addClass('js-ticker-item').appendTo(track);
+
+				this.elem.append(track);
+				//endregion
+
+				//region Init Variables
+				this.track = this.elem.find('.js-ticker-track');
 				this.__items = this.track.children('.js-ticker-item');
 
 				this.__first = this.__items.first();
 				this.__first.attr('data-first', true);
+				//endregion
 
+				//region Clone For Scale
 				var targetWidth = this.elem.width() + this.__first.width();
 
 				log$2('(Pre Clones) Target Width: %d, Actual: %d', targetWidth, this.elem[0].scrollWidth);
@@ -941,41 +953,40 @@ var Ticker = function () {
 				}
 
 				log$2('(Post Clones) Target Width: %d, Actual: %d', targetWidth, this.elem[0].scrollWidth);
+				//endregion
 
+				//region Init Events
+				// Insurance to prevent doubling up on enter triggers
+				/* FIXME: This looks... un... safe. */
+				var initHover = function initHover() {
+					_this.elem.one('mouseenter', function () {
+						_this.__pauseTracker++;
+						_this.elem.one('mouseleave', function () {
+							_this.__pauseTracker--;
+							initHover();
+						});
+					});
+				};
+
+				if (this.settings.pauseOnHover) initHover();
+
+				/* TODO: Pause on focus and reset slider position for ADA
+     * - Also need a solution on keyboard navigation
+     **/
+				//endregion
+
+				//region Enable Ticker
 				this.elem.addClass('active');
-
-				this.initEvents();
+				this.elem.data('ticker', this);
 
 				brain.tickers.push(this);
+				//endregion
 			}
-		}
-	}, {
-		key: 'initEvents',
-		value: function initEvents() {
-			var _this2 = this;
-
-			// Insurance to prevent doubling up on enter triggers
-			/* FIXME: This looks... un... safe. */
-			var initHover = function initHover() {
-				_this2.elem.one('mouseenter', function () {
-					_this2.__pauseTracker++;
-					_this2.elem.one('mouseleave', function () {
-						_this2.__pauseTracker--;
-						initHover();
-					});
-				});
-			};
-
-			if (this.settings.pauseOnHover) initHover();
-
-			/* TODO: Pause on focus and reset slider position for ADA
-    * - Also need a solution on keyboard navigation
-    **/
 		}
 	}, {
 		key: 'advance',
 		value: function advance() {
-			var _this3 = this;
+			var _this2 = this;
 
 			this.__width = this.__first.outerWidth();
 			if (!this.__pauseTracker) {
@@ -990,7 +1001,7 @@ var Ticker = function () {
 					if (this.settings.pauseAt === 'item' || this.settings.pauseAt === 'track' && this.__first.data('first')) {
 						this.__pauseTracker++;
 						setTimeout(function () {
-							return _this3.__pauseTracker--;
+							return _this2.__pauseTracker--;
 						}, this.settings.delay);
 					}
 				}
@@ -1024,27 +1035,15 @@ var log = logger('entry');
 
 	if (!$) return console.warn('Whoa there, buddy! Looks like you included the jQuery Ticker plugin without including jQuery first.');
 
-	$.ticker = Ticker;
+	$.ticker = function (elem, settings) {
+		return new Ticker($(elem), settings);
+	};
 
-	$.fn.ticker = function (overrides) {
-		var settings = $.extend(true, {}, defaultOptions, overrides);
+	$.fn.ticker = function () {
+		var overrides = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-		/* FIXME: Clean this up
-   * - Ideally, all this init code should go into the ticker class, but I don't want it to be dependent on jQuery
-   * - Passing in the track doesn't seem ideal either
-   * - Maybe make it possible to use $.ticker on its own
-   **/
 		return this.each(function () {
-			var $ticker = $(this);
-			var $track = $('<div class="js-ticker-track">');
-
-			$ticker.addClass('js-ticker');
-			$ticker.children(settings.item).addClass('js-ticker-item').appendTo($track);
-
-			$ticker.append($track);
-
-			var ticker = new $.ticker($ticker, settings);
-			$(this).data('ticker', ticker);
+			$.ticker(this, $.extend(true, {}, defaultOptions, overrides));
 		});
 	};
 
