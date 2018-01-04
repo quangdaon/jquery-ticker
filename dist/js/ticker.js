@@ -11,9 +11,9 @@ var defaultOptions = {
 	speed: 60,
 
 	// String: (track|item) Sets whether ticker breaks when it hits a new item or if the track has reset
-	pauseOn: '',
+	pauseAt: '',
 
-	// Number: Pause duration for pauseOn
+	// Number: Pause duration for pauseAt
 	delay: 500
 };
 
@@ -894,7 +894,13 @@ var createClass = function () {
   };
 }();
 
+/* Ticker Class - Controls each instance of a ticker. */
+
 var log$2 = logger('class');
+
+/* TODO: Port over to private fields
+ * - Requires Gulp setup
+ **/
 
 var Ticker = function () {
 	function Ticker(elem, settings) {
@@ -949,6 +955,7 @@ var Ticker = function () {
 			var _this2 = this;
 
 			// Insurance to prevent doubling up on enter triggers
+			/* FIXME: This looks... un... safe. */
 			var initHover = function initHover() {
 				_this2.elem.one('mouseenter', function () {
 					_this2.__pauseTracker++;
@@ -960,6 +967,10 @@ var Ticker = function () {
 			};
 
 			if (this.settings.pauseOnHover) initHover();
+
+			/* TODO: Pause on focus and reset slider position for ADA
+    * - Also need a solution on keyboard navigation
+    **/
 		}
 	}, {
 		key: 'advance',
@@ -971,6 +982,7 @@ var Ticker = function () {
 
 				this.__offset += this.settings.speed / brain.fps;
 
+				/* TODO: Need a solution to go in reverse */
 				if (this.__offset > this.__width) {
 					this.__offset = 0;
 					this.__first.appendTo(this.track);
@@ -1017,6 +1029,11 @@ var log = logger('entry');
 	$.fn.ticker = function (overrides) {
 		var settings = $.extend(true, {}, defaultOptions, overrides);
 
+		/* FIXME: Clean this up
+   * - Ideally, all this init code should go into the ticker class, but I don't want it to be dependent on jQuery
+   * - Passing in the track doesn't seem ideal either
+   * - Maybe make it possible to use $.ticker on its own
+   **/
 		return this.each(function () {
 			var $ticker = $(this);
 			var $track = $('<div class="js-ticker-track">');

@@ -1,9 +1,15 @@
+/* Ticker Class - Controls each instance of a ticker. */
+
 import { getSupportedTransform } from './helpers';
 import brain from './brain';
 
 import logger from './logger';
 
 const log = logger('class');
+
+/* TODO: Port over to private fields
+ * - Requires Gulp setup
+ **/
 
 export default class Ticker {
 	constructor(elem, settings) {
@@ -49,6 +55,7 @@ export default class Ticker {
 
 	initEvents() {
 		// Insurance to prevent doubling up on enter triggers
+		/* FIXME: This looks... un... safe. */
 		const initHover = () => {
 			this.elem.one('mouseenter', () => {
 				this.__pauseTracker++;
@@ -60,6 +67,10 @@ export default class Ticker {
 		};
 
 		if(this.settings.pauseOnHover) initHover();
+
+		/* TODO: Pause on focus and reset slider position for ADA
+		 * - Also need a solution on keyboard navigation
+		 **/
 	}
 
 	advance() {
@@ -68,6 +79,7 @@ export default class Ticker {
 
 			this.__offset += this.settings.speed / brain.fps;
 
+			/* TODO: Need a solution to go in reverse */
 			if (this.__offset > this.__width) {
 				this.__offset = 0;
 				this.__first.appendTo(this.track);

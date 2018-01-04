@@ -19,6 +19,11 @@ const log = logger('entry');
 	$.fn.ticker = function (overrides) {
 		const settings = $.extend(true, {}, defaultOptions, overrides);
 
+		/* FIXME: Clean this up
+		 * - Ideally, all this init code should go into the ticker class, but I don't want it to be dependent on jQuery
+		 * - Passing in the track doesn't seem ideal either
+		 * - Maybe make it possible to use $.ticker on its own
+		 **/
 		return this.each(function () {
 			const $ticker = $(this);
 			const $track = $('<div class="js-ticker-track">');
