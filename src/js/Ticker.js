@@ -115,6 +115,29 @@ export default class Ticker {
 		}
 	}
 
+	pause() {
+		if (!this.__manuallyPaused) {
+			this.__pauseTracker++;
+			this.__manuallyPaused = true;
+		}
+	}
+
+	play() {
+		if (this.__manuallyPaused) {
+			this.__pauseTracker--;
+			this.__manuallyPaused = false;
+		}
+	}
+
+	toggle() {
+		if (this.__manuallyPaused) {
+			this.play();
+		} else {
+			this.pause();
+		}
+
+	}
+
 	static get version() {
 		return '|VERSION|';
 	}

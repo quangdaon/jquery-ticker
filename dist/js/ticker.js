@@ -1015,6 +1015,31 @@ var Ticker = function () {
 				}
 			}
 		}
+	}, {
+		key: 'pause',
+		value: function pause() {
+			if (!this.__manuallyPaused) {
+				this.__pauseTracker++;
+				this.__manuallyPaused = true;
+			}
+		}
+	}, {
+		key: 'play',
+		value: function play() {
+			if (this.__manuallyPaused) {
+				this.__pauseTracker--;
+				this.__manuallyPaused = false;
+			}
+		}
+	}, {
+		key: 'toggle',
+		value: function toggle() {
+			if (this.__manuallyPaused) {
+				this.play();
+			} else {
+				this.pause();
+			}
+		}
 	}], [{
 		key: 'version',
 		get: function get$$1() {

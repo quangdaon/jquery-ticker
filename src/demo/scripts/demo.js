@@ -1,9 +1,13 @@
 $('.default-ticker').ticker();
 
-$('.news').ticker({
+var newsTicker = $('.news').ticker({
 	speed: 120,
 	pauseOnHover: true,
 	item: '.news-item'
+}).data('ticker');
+
+$('#news-toggle').on('click', function () {
+	newsTicker.toggle();
 });
 
 $('.speed-test').each(function () {
