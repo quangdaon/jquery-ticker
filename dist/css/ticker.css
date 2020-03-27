@@ -14,7 +14,7 @@
   position: relative;
 }
 
-@supports ((display: -webkit-box) or (display: flex)) {
+@supports (display: flex) {
   .js-ticker-track {
     position: relative;
     white-space: normal;
